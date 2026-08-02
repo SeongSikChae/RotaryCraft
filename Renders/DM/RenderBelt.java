@@ -729,6 +729,7 @@ public class RenderBelt extends RotaryTERenderer
 
 	@Override
 	public String getImageFileName(RenderFetcher te) {
-		return "belttex.png";
+		// Include subfolder: block break/hit particles prepend TileEntityTex/ only.
+		return "Transmission/belttex.png";
 	}
 }
