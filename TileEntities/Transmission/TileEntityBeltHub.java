@@ -29,6 +29,7 @@ import Reika.RotaryCraft.API.Power.PowerGenerator;
 import Reika.RotaryCraft.API.Power.ShaftMerger;
 import Reika.RotaryCraft.Auxiliary.ItemStacks;
 import Reika.RotaryCraft.Auxiliary.PowerSourceList;
+import Reika.RotaryCraft.Auxiliary.RotaryAux;
 import Reika.RotaryCraft.Auxiliary.Interfaces.PowerSourceTracker;
 import Reika.RotaryCraft.Auxiliary.Interfaces.SimpleProvider;
 import Reika.RotaryCraft.Auxiliary.Interfaces.TransmissionReceiver;
@@ -101,7 +102,10 @@ public class TileEntityBeltHub extends TileEntityPowerReceiver implements PowerG
 
 	private void playSound(World world, int x, int y, int z) {
 		if (sound.checkCap()) {
-			SoundRegistry.BELT.playSoundAtBlock(world, x, y, z, 0.6F, 1F);
+			float volume = 0.6F;
+			if (RotaryAux.isMuffled(this))
+				volume *= 0.3125F;
+			SoundRegistry.BELT.playSoundAtBlock(world, x, y, z, volume, 1F);
 		}
 	}
 
@@ -228,8 +232,13 @@ public class TileEntityBeltHub extends TileEntityPowerReceiver implements PowerG
 		power = 0;
 		if (this.hasValidConnection()) {
 			TileEntityBeltHub tile = (TileEntityBeltHub)otherEnd.getTileEntity(worldObj);
-			omega = this.copyOmegaFromDriverSide(tile.omegain);
-			torque = this.copyTorqueFromDriverSide(tile.torquein);
+			// omegain/torquein are only filled when getPower runs. On the client that is
+			// often skipped (getPowerOnClient=false), so fall back to synced omega/torque
+			// or the receiving hub never animates while connected in output mode.
+			int srcOmega = Math.max(tile.omega, tile.omegain);
+			int srcTorque = Math.max(tile.torque, tile.torquein);
+			omega = this.copyOmegaFromDriverSide(srcOmega);
+			torque = this.copyTorqueFromDriverSide(srcTorque);
 			power = (long)omega*(long)torque;
 			noInput = false;
 		}
