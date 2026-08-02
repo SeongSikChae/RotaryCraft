@@ -27,7 +27,6 @@ import net.minecraft.util.StatCollector;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
-import Reika.ChromatiCraft.Auxiliary.Interfaces.NBTTile;
 import Reika.DragonAPI.DragonAPICore;
 import Reika.DragonAPI.DragonOptions;
 import Reika.DragonAPI.ModList;
@@ -39,6 +38,7 @@ import Reika.DragonAPI.Instantiable.Data.Maps.MultiMap;
 import Reika.DragonAPI.Interfaces.Registry.TileEnum;
 import Reika.DragonAPI.Libraries.Java.ReikaJavaLibrary;
 import Reika.DragonAPI.Libraries.Registry.ReikaItemHelper;
+import Reika.DragonAPI.Libraries.ReikaNBTHelper;
 import Reika.DragonAPI.ModRegistry.PowerTypes;
 import Reika.RotaryCraft.RotaryCraft;
 import Reika.RotaryCraft.RotaryNames;
@@ -999,10 +999,14 @@ public enum MachineRegistry implements TileEnum {
 		if (this == GEARBOX) {
 			is = ((TileEntityGearbox)te).getGearboxType().getGearboxItem(((TileEntityGearbox)te).getRatio());
 		}
-		if (te instanceof NBTTile) {
-			if (is.stackTagCompound == null)
-				is.stackTagCompound = new NBTTagCompound();
-			((NBTTile)te).getTagsToWriteToStack(is.stackTagCompound);
+		if (te instanceof NBTMachine) {
+			NBTTagCompound nbt = ((NBTMachine)te).getTagsToWriteToStack();
+			if (nbt != null && !nbt.hasNoTags()) {
+				if (is.stackTagCompound == null)
+					is.stackTagCompound = (NBTTagCompound)nbt.copy();
+				else
+					ReikaNBTHelper.combineNBT(is.stackTagCompound, nbt);
+			}
 		}
 		return is;
 	}
